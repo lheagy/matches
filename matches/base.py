@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 
 # info from pytorch
@@ -8,5 +9,7 @@ torch_activations = [
     "tanh", "sigmoid"
 ]
 
-
+# can we use a GPU?
+cuda_available = True if torch.cuda.device_count() > 0 else False
+dtype = np.float32 if cuda_available is True else np.float64
 

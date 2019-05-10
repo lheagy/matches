@@ -4,10 +4,7 @@ from torch import nn
 from .base import torch_activations
 from .utils import set_kwargs
 
-class DenseLayer(nn.Module):
-    """
-    A dense layer followed by an activation function
-    """
+class BaseLayer(nn.Module):
 
     _default_activation = "relu"
 
@@ -46,10 +43,26 @@ class DenseLayer(nn.Module):
            )
         self._activation = val
 
-    def __init__(self, **kwargs):
+    def __init__(self, layer=None, **kwargs):
+        super(BaseLayer, self).__init__()
+        set_kwargs(self, **kwargs)
+        self.layer = layer
+
+    def forward(self, x):
+        return getattr(torch, self.activation)(self.layer(x))
+
+class DenseLayer(BaseLayer):
+    """
+    A dense layer followed by an activation function
+    """
+
+    def __init__(self, shape=None, **kwargs):
         super(DenseLayer, self).__init__()
+        self.shape = shape
         set_kwargs(self, **kwargs)
         self.layer = nn.Linear(self.shape[0], self.shape[1])
 
     def forward(self, x):
         return getattr(torch, self.activation)(self.layer(x))
+
+

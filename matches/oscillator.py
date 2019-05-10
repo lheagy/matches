@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.integrate import odeint
 
+__all__ = ["mass_spring_deriv", "mass_spring", "simulate_data"]
+
 def mass_spring_deriv(yvec, time, nu_effective, k_effective):
     """
     Damped mass spring oscillator derivatives (y', y'')
@@ -15,17 +17,19 @@ def mass_spring_deriv(yvec, time, nu_effective, k_effective):
     """
     return (yvec[1], -nu_effective * yvec[1] - k_effective * yvec[0])
 
-def mass_spring(time, nu_effective, k_effective, initial_condition=(1.0, 0.0)):
+
+def mass_spring(time, nu_effective, k_effective, initial_conditions=(1.0, 0.0)):
     """
     Solves the damped mass spring oscillator equation for the position and first
     derivative
     """
     return odeint(
-        mass_spring_deriv, initial_condition, time,
+        mass_spring_deriv, initial_conditions, time,
         args=(nu_effective, k_effective)
     )
 
-def simulate_data(time, nu_effective=None, k_effective=None, initial_condition=(1.0, 0.0), nsamples=1000, seeds=None):
+
+def simulate_data(time, nu_effective=None, k_effective=None, initial_conditions=(1.0, 0.0), nsamples=1000, seeds=None):
 
     ntimesteps = len(time)
 
@@ -45,30 +49,33 @@ def simulate_data(time, nu_effective=None, k_effective=None, initial_condition=(
         k_effective = np.random.rand(nsamples)
 
     if len(initial_conditions) == 2:
-        initial_conditions = np.repeat(np.atleast_2d(initial_condition), nsamples, axis=0)
-    if initial_condition.shape != (nsamples, 2):
+        initial_conditions = np.repeat(np.atleast_2d(initial_conditions), nsamples, axis=0)
+    if initial_conditions.shape != (nsamples, 2):
         raise Exception(
             f"initial condition must be shape ({nsamples}, 2). "
-            f"The input shape is ({initial_condition.shape})"
+            f"The input shape is ({initial_conditions.shape})"
         )
 
     # initialize data storage for position and derivative
-    y = np.empty(nsamples, ntimesteps)
-    y_prime = np.empty(nsamples, ntimesteps)
+    y = np.empty((nsamples, ntimesteps))
+    y_prime = np.empty((nsamples, ntimesteps))
 
     # loop over samples
     for i in range(nsamples):
-        y[i, :], y_prime[i, :] = mass_spring(
-            time, nu_effective[i], k_effective[i], initial_condition[i, :]
+        dat = mass_spring(
+            time, nu_effective[i], k_effective[i], initial_conditions[i, :]
         )
+        y[i, :], y_prime[i, :] = dat[:, 0], dat[:, 1]
 
     data_dict = {
         'nu_effective': nu_effective,
         'k_effective': k_effective,
-        'initial_condition': initial_condition
+        'initial_conditions': initial_conditions,
         'time': time,
         'y': y,
-        'y_prime': yprime
+        'y_prime': y_prime
     }
 
     return data_dict
+
+
